@@ -1,0 +1,6 @@
+_extends: gh-config
+
+repository:
+  description: A python lib is used for adding aws version 4 signature to request.
+  homepage: https://blog.openacid.com
+  topics: python, aws
