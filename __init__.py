@@ -9,7 +9,7 @@ from .awssign import (
     Signer,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __name__ = "k3awssign"
 
 __all__ = [
