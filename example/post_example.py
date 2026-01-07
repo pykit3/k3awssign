@@ -13,7 +13,7 @@ def send_post_request(host, port, headers, fields):
     headers = multipart_cli.make_headers(fields, headers)
     body = multipart_cli.make_body_reader(fields)
 
-    conn.send_request('/', method='POST', headers=headers)
+    conn.send_request("/", method="POST", headers=headers)
 
     for data in body:
         conn.send_body(data)
@@ -22,63 +22,65 @@ def send_post_request(host, port, headers, fields):
 
     body = []
     while True:
-        buf = conn.read_body(1024*1024)
-        if buf == '':
+        buf = conn.read_body(1024 * 1024)
+        if buf == "":
             break
 
         body.append(buf)
 
     return {
-        'status_code': ret_status,
-        'headers': ret_headers,
-        'body': ''.join(body),
+        "status_code": ret_status,
+        "headers": ret_headers,
+        "body": "".join(body),
     }
 
 
-if __name__ == '__main__':
-    bucket_name = 'your bucket name'
-    key_name = 'key name to upload'
-    endpoint = 's2 endpoint domain name'
+if __name__ == "__main__":
+    bucket_name = "your bucket name"
+    key_name = "key name to upload"
+    endpoint = "s2 endpoint domain name"
 
     # https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPOST.html
     # Host must be in the format of destinationBucket.endpoint
     # you should add it in /etc/hosts
-    host = bucket_name + '.' + endpoint
+    host = bucket_name + "." + endpoint
     port = 80
 
-    access_key = 'access key'
-    secret_key = 'secret key'
+    access_key = "access key"
+    secret_key = "secret key"
 
     signer = k3awssign.Signer(access_key, secret_key)
     fields = {
-        'key': key_name,  # key name
-        'Policy': {
-            'expiration': '2018-09-30T00:00:00.000Z',
-            'conditions': [
-                ['starts-with', '$key', ''],
+        "key": key_name,  # key name
+        "Policy": {
+            "expiration": "2018-09-30T00:00:00.000Z",
+            "conditions": [
+                ["starts-with", "$key", ""],
                 {
-                    'bucket': bucket_name,  # bucket name
+                    "bucket": bucket_name,  # bucket name
                 },
             ],
         },
     }
 
     headers = {
-        'Host': host,
+        "Host": host,
     }
 
-    signer.add_post_auth(fields, request_date='20180911T120101Z')
+    signer.add_post_auth(fields, request_date="20180911T120101Z")
 
     fields_to_sent = []
     for k, v in fields.items():
-        fields_to_sent.append({'name': k, 'value': v})
+        fields_to_sent.append({"name": k, "value": v})
 
     # file must be the last field
     # content can also be a opened file
-    content = 'this is test of k3awssign.add_post_auth'
-    fields_to_sent.append({
-        'name': 'file',
-        'value': [content, len(content), 'file name'],
-    })
+    content = "this is test of k3awssign.add_post_auth"
+    fields_to_sent.append(
+        {
+            "name": "file",
+            "value": [content, len(content), "file name"],
+        }
+    )
 
     print(send_post_request(host, port, headers, fields_to_sent))

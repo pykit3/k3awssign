@@ -1,0 +1,30 @@
+site_name: k3awssign
+site_description: A python lib for adding AWS signature version 4 to requests
+site_url: https://k3awssign.readthedocs.io
+repo_url: https://github.com/pykit3/k3awssign
+repo_name: pykit3/k3awssign
+
+theme:
+  name: material
+  palette:
+    primary: blue
+    accent: blue
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+
+nav:
+  - Home: index.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences

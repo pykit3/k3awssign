@@ -5,14 +5,15 @@ contains `verb`, `uri`, `args`, `headers`, `body`), and your access key
 and your secret key. This lib will add signature to the request.
 """
 
+from importlib.metadata import version
+
 from .awssign import (
     Signer,
 )
 
-__version__ = "0.1.1"
+__version__ = version("k3awssign")
 __name__ = "k3awssign"
 
 __all__ = [
-    'Signer',
+    "Signer",
 ]
-

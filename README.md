@@ -1,7 +1,6 @@
 # k3awssign
 
 [![Action-CI](https://github.com/pykit3/k3awssign/actions/workflows/python-package.yml/badge.svg)](https://github.com/pykit3/k3awssign/actions/workflows/python-package.yml)
-[![Build Status](https://travis-ci.com/pykit3/k3awssign.svg?branch=master)](https://travis-ci.com/pykit3/k3awssign)
 [![Documentation Status](https://readthedocs.org/projects/k3awssign/badge/?version=stable)](https://k3awssign.readthedocs.io/en/stable/?badge=stable)
 [![Package](https://img.shields.io/pypi/pyversions/k3awssign)](https://pypi.org/project/k3awssign)
 
