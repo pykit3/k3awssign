@@ -260,7 +260,7 @@ class Signer(SigV4):
 
     def _get_request_date(self, request_date):
         if isinstance(request_date, (int, float)):
-            dt = datetime.datetime.utcfromtimestamp(request_date)
+            dt = datetime.datetime.fromtimestamp(request_date, datetime.timezone.utc)
             request_date = dt.strftime(SIGV4_TIMESTAMP)
         elif isinstance(request_date, str):
             try:
@@ -270,7 +270,7 @@ class Signer(SigV4):
                     "request date: %s is not iso base formmat like 20161206T120102Z" % str(request_date)
                 )
         else:
-            datetime_now = datetime.datetime.utcnow()
+            datetime_now = datetime.datetime.now(datetime.timezone.utc)
             request_date = datetime_now.strftime(SIGV4_TIMESTAMP)
 
         return request_date
