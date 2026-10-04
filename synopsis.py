@@ -1,5 +1,6 @@
-import k3awssign
 import httplib
+
+import k3awssign
 
 access_key = "your access key"
 secret_key = "your secret key"

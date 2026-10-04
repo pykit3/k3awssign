@@ -19,19 +19,19 @@ pip install k3awssign
 ```python
 import k3awssign
 
-access_key = 'your access key'
-secret_key = 'your secret key'
+access_key = "your access key"
+secret_key = "your secret key"
 
 signer = k3awssign.Signer(access_key, secret_key)
 
 request = {
-    'verb': 'PUT',
-    'uri': '/test-bucket/test-key',
-    'headers': {
-        'Host': 'bscstorage.com',
-        'Content-Length': 7,
+    "verb": "PUT",
+    "uri": "/test-bucket/test-key",
+    "headers": {
+        "Host": "bscstorage.com",
+        "Content-Length": 7,
     },
-    'body': 'bla bla',
+    "body": "bla bla",
 }
 
 signer.add_auth(request, sign_payload=True)

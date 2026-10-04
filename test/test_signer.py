@@ -1,6 +1,3 @@
-#!/usr/bin/env python2.6
-# coding: utf-8
-
 import unittest
 
 import k3awssign
@@ -266,12 +263,12 @@ class TestSigner(unittest.TestCase):
             self.assertEqual(
                 expected_hashed_payload,
                 actual_hashed_payload,
-                "in case %d: %s, %s" % (i, expected_hashed_payload, actual_hashed_payload),
+                f"in case {i}: {expected_hashed_payload}, {actual_hashed_payload}",
             )
             self.assertEqual(
                 expected_headers,
                 request["headers"],
-                "in case %d: %s, %s" % (i, repr(expected_headers), repr(request["headers"])),
+                f"in case {i}: {expected_headers!r}, {request['headers']!r}",
             )
 
     def test_use_both_args_and_query_string(self):
@@ -296,7 +293,7 @@ class TestSigner(unittest.TestCase):
             },
         )
         for request in test_cases:
-            with self.assertRaises(Exception):
+            with self.assertRaises(k3awssign.awssign.InvalidRequestError):
                 self.signer.add_auth(request)
 
     def test_custom_signing_date(self):

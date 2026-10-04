@@ -66,7 +66,7 @@ class InvalidRequestHeaerNameError(InvalidRequestHeadersError):
     pass
 
 
-class SigV4(object):
+class SigV4:
     def _to_utf8(self, string):
         if string is None:
             return
@@ -103,7 +103,7 @@ class SigV4(object):
 
     def _build_canonical_query_string(self, encoded_args):
         arg_names = []
-        for k, _ in encoded_args.items():
+        for k in encoded_args:
             if k != "X-Amz-Signature":
                 arg_names.append(k)
 
@@ -264,10 +264,10 @@ class Signer(SigV4):
             request_date = dt.strftime(SIGV4_TIMESTAMP)
         elif isinstance(request_date, str):
             try:
-                datetime.datetime.strptime(request_date, SIGV4_TIMESTAMP)
+                datetime.datetime.strptime(request_date, SIGV4_TIMESTAMP).replace(tzinfo=datetime.timezone.utc)
             except ValueError:
                 raise RequestDateFormatError(
-                    "request date: %s is not iso base formmat like 20161206T120102Z" % str(request_date)
+                    f"request date: {request_date} is not iso base formmat like 20161206T120102Z"
                 )
         else:
             datetime_now = datetime.datetime.now(datetime.timezone.utc)
@@ -326,7 +326,7 @@ class Signer(SigV4):
 
         signed_header_names = []
 
-        for h_name in stand_headers.keys():
+        for h_name in stand_headers:
             if h_name not in headers_not_to_sign_low:
                 signed_header_names.append(str(h_name))
 
@@ -338,15 +338,15 @@ class Signer(SigV4):
             return
 
         if not isinstance(arg_value, list):
-            raise InvalidRequestArgValueError("arg value: %s, must be string or list or True" % repr(arg_value))
+            raise InvalidRequestArgValueError(f"arg value: {arg_value!r}, must be string or list or True")
 
         for value in arg_value:
             if not isinstance(value, str) and value is not True:
-                raise InvalidRequestArgValueError("multi arg value: %s, must be string or True" % repr(value))
+                raise InvalidRequestArgValueError(f"multi arg value: {value!r}, must be string or True")
 
     def _validate_uri_and_args(self, uri, args):
         if not isinstance(uri, str) or not uri.startswith("/"):
-            raise InvalidRequestUriError("uri: %s, must be a string and starts with /" % repr(uri))
+            raise InvalidRequestUriError(f"uri: {uri!r}, must be a string and starts with /")
 
         has_query_string = False
         if len(uri.split("?")) > 1:
@@ -358,22 +358,22 @@ class Signer(SigV4):
             return
 
         if not isinstance(args, dict):
-            raise InvalidRequestArgError("args: %s, is not a dict" % repr(args))
+            raise InvalidRequestArgError(f"args: {args!r}, is not a dict")
 
         for arg_name, arg_value in args.items():
             if not isinstance(arg_name, str):
-                raise InvalidRequestArgNameError("arg name: %s, is not a string" % repr(arg_name))
+                raise InvalidRequestArgNameError(f"arg name: {arg_name!r}, is not a string")
 
             self._validate_arg_value(arg_value)
 
     def _validate_headers(self, headers):
         if not isinstance(headers, dict):
-            raise InvalidRequestHeadersError("headers: %s, is not a dict" % repr(headers))
+            raise InvalidRequestHeadersError(f"headers: {headers!r}, is not a dict")
 
         has_host = False
-        for k, _ in headers.items():
+        for k in headers:
             if not isinstance(k, str):
-                raise InvalidRequestHeaerNameError("header name: %s, is not a string" % repr(k))
+                raise InvalidRequestHeaerNameError(f"header name: {k!r}, is not a string")
 
             if k.lower() == "host":
                 has_host = True
@@ -383,7 +383,7 @@ class Signer(SigV4):
 
     def _validate_request(self, request):
         if not isinstance(request, dict):
-            raise InvalidRequestError("request: %s, is not a dict" % repr(request))
+            raise InvalidRequestError(f"request: {request!r}, is not a dict")
         if not isinstance(request.get("verb"), str):
             raise InvalidRequestVerbError("absence of or invalid request verb")
 
@@ -433,9 +433,9 @@ class Signer(SigV4):
         credential_date = signing_date or request_date[:8]
 
         if not isinstance(credential_date, str):
-            raise InvalidSigningDateError("invalid signing date: %s, not of string type" % repr(credential_date))
+            raise InvalidSigningDateError(f"invalid signing date: {credential_date!r}, not of string type")
 
-        credential_scope = "/".join([credential_date, self._region, self._service, CREDENTIALS_SUFFIX])
+        credential_scope = f"{credential_date}/{self._region}/{self._service}/{CREDENTIALS_SUFFIX}"
 
         return credential_scope
 
@@ -570,9 +570,9 @@ class Signer(SigV4):
             else:
                 request["uri"] = origin_uri_path
 
-            auth_parts = ["AWS4-HMAC-SHA256 Credential=%s" % credential]
-            auth_parts.append("SignedHeaders=%s" % ctx["signed_headers"])
-            auth_parts.append("Signature=%s" % ctx["signature"])
+            auth_parts = [f"AWS4-HMAC-SHA256 Credential={credential}"]
+            auth_parts.append(f"SignedHeaders={ctx['signed_headers']}")
+            auth_parts.append(f"Signature={ctx['signature']}")
             request["headers"]["Authorization"] = ", ".join(auth_parts)
 
         return ctx
