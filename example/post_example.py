@@ -23,7 +23,7 @@ def send_post_request(host, port, headers, fields):
     body = []
     while True:
         buf = conn.read_body(1024 * 1024)
-        if buf == "":
+        if buf == b"":
             break
 
         body.append(buf)
@@ -31,7 +31,7 @@ def send_post_request(host, port, headers, fields):
     return {
         "status_code": ret_status,
         "headers": ret_headers,
-        "body": "".join(body),
+        "body": b"".join(body),
     }
 
 
