@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import k3awssign
@@ -321,3 +322,83 @@ class TestSigner(unittest.TestCase):
 
         ctx = self.signer.add_auth(request, signing_date="20150102")
         self.assertEqual("20150102/us-east-1/s3/aws4_request", ctx["credential_scope"])
+
+
+# The AWS SigV4 test suite, copied from
+# https://github.com/boto/botocore/tree/6197e54b71a21a2e6dab2177ca051e64b51f4452/tests/unit/auth/aws4_testsuite
+# It leaves out the 6 `normalize-path` cases that remove `.`, `..` and repeated `/`,
+# because k3awssign signs a path as S3 does, without normalizing it.
+AWS4_TESTSUITE = os.path.join(os.path.dirname(__file__), "aws4_testsuite")
+
+
+def _parse_aws4_request(text):
+    # A repeated header becomes a list, and a line that starts with a space continues the header above it.
+    head, _, body = text.partition("\n\n")
+    lines = head.split("\n")
+
+    verb, rest = lines[0].split(" ", 1)
+    uri, _, _ = rest.rpartition(" ")
+
+    headers = {}
+    name = None
+    for line in lines[1:]:
+        if line.startswith(" "):
+            headers[name][-1] += "\n" + line
+            continue
+
+        name, _, value = line.partition(":")
+        headers.setdefault(name, []).append(value)
+
+    for name, values in headers.items():
+        if len(values) == 1:
+            headers[name] = values[0]
+
+    return {"verb": verb, "uri": uri, "headers": headers, "body": body}
+
+
+class TestAws4TestSuite(unittest.TestCase):
+    def test_aws4_testsuite(self):
+        bases = []
+        for root, _, files in os.walk(AWS4_TESTSUITE):
+            for f in files:
+                if f.endswith(".sreq"):
+                    bases.append(os.path.join(root, f[: -len(".sreq")]))
+
+        self.assertEqual(28, len(bases))
+
+        signer = k3awssign.Signer(
+            "AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY", region="us-east-1", service="service"
+        )
+
+        for base in sorted(bases):
+            name = os.path.relpath(base, AWS4_TESTSUITE)
+
+            # `.sreq` is the signed request: it holds the headers a client adds, such as `X-Amz-Security-Token`.
+            with open(base + ".sreq", encoding="utf-8") as f:
+                sreq = f.read()
+            with open(base + ".creq", encoding="utf-8") as f:
+                creq = f.read()
+            with open(base + ".authz", encoding="utf-8") as f:
+                authz = f.read()
+
+            # `.authz` names the headers to sign. No case signs `X-Amz-Content-SHA256`, which k3awssign adds.
+            _, _, after = authz.partition("SignedHeaders=")
+            signed_headers, _, _ = after.partition(",")
+            signed = signed_headers.split(";")
+
+            for to_bytes in (False, True):
+                request = _parse_aws4_request(sreq)
+                request["headers"].pop("Authorization")
+                if to_bytes:
+                    request["body"] = request["body"].encode("utf-8")
+
+                not_to_sign = ["x-amz-content-sha256"]
+                for h in request["headers"]:
+                    if h.lower() not in signed:
+                        not_to_sign.append(h)
+
+                ctx = signer.add_auth(
+                    request, sign_payload=True, request_date="20150830T123600Z", headers_not_to_sign=not_to_sign
+                )
+                self.assertEqual(creq, ctx["canonical_request"], name)
+                self.assertEqual(authz, request["headers"]["Authorization"], name)
