@@ -258,6 +258,18 @@ class TestSigner(unittest.TestCase):
                 "foo",
                 {"X-Amz-Content-SHA256": "foo"},
             ),
+            (
+                12,
+                {"headers": {}, "body": b"foo"},
+                False,
+                True,
+                "20161206T000000Z",
+                "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                {
+                    "X-Amz-Date": "20161206T000000Z",
+                    "X-Amz-Content-SHA256": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                },
+            ),
         )
 
         for i, request, presign, sign_payload, request_date, expected_hashed_payload, expected_headers in test_cases:

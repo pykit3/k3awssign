@@ -432,8 +432,12 @@ class Signer(SigV4):
             request["headers"]["X-Amz-Content-SHA256"] = UNSIGNED_PAYLOAD
             return UNSIGNED_PAYLOAD
 
-        if isinstance(request.get("body"), str) and len(request["body"]) > 0:
-            hashed_payload = self._make_sha256(self._to_utf8(request["body"]))
+        body = request.get("body")
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+
+        if body:
+            hashed_payload = sha256(body).hexdigest()
         else:
             hashed_payload = EMPTY_PAYLOAD_HASH
 
@@ -462,8 +466,8 @@ class Signer(SigV4):
         args: a python dict contains the request parameters, it should not be url encoded. You can not use both
         args and query string in `uri` at the same time.
         headers: a python dict contains request headers. It must contains the 'Host' header.
-        body: a string contains the request payload. If you do not want to sign the payload or you have set
-        'X-Amz-ContentSHA256' header in `headers`, you can omit this field.
+        body: a `str` or `bytes` that contains the request payload. If you do not want to sign the payload or you have
+        set 'X-Amz-ContentSHA256' header in `headers`, you can omit this field.
         :param argkv: following keyword arguments are allowed.
         query_auth:
         set to `True` if you want to add the signature to the query string.
