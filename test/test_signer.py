@@ -23,11 +23,12 @@ class TestSigner(unittest.TestCase):
             ({"foo": True}, "foo=", "case 2"),
             ({"foo": [True]}, "foo=", "case 3"),
             ({"foo": [""]}, "foo=", "case 4"),
-            ({"foo": [True, "bar", True]}, "foo=", "case 5"),
-            ({"foo": ["bar", True], "bar": ""}, "bar=&foo=bar", "case 6"),
+            ({"foo": [True, "bar", True]}, "foo=&foo=&foo=bar", "case 5"),
+            ({"foo": ["bar", True], "bar": ""}, "bar=&foo=&foo=bar", "case 6"),
             ({"foo": "", "bar": True}, "bar=&foo=", "case 7"),
-            ({"bar": [True, "bar"]}, "bar=", "case 8"),
+            ({"bar": [True, "bar"]}, "bar=&bar=bar", "case 8"),
             ({"X-Amz-Signature": "foo", "bar": "bar"}, "bar=bar", "case 9"),
+            ({"foo": ["b", "a"], "a": "x"}, "a=x&foo=a&foo=b", "case 10"),
         )
         for args, expected, des in test_cases:
             actual = self.signer._build_canonical_query_string(args)

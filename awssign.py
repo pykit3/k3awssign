@@ -111,15 +111,21 @@ class SigV4:
 
         key_value_strs = []
         for name in arg_names:
-            value = encoded_args[name]
+            values = encoded_args[name]
 
-            if isinstance(value, list):
-                value = value[0]
+            if not isinstance(values, list):
+                values = [values]
 
-            if not isinstance(value, str):
-                value = ""
+            name_value_strs = []
+            for value in values:
+                if not isinstance(value, str):
+                    value = ""
 
-            key_value_strs.append(name + "=" + value)
+                name_value_strs.append(name + "=" + value)
+
+            # Every value of a repeated name is signed, sorted by value.
+            name_value_strs.sort()
+            key_value_strs.extend(name_value_strs)
 
         return "&".join(key_value_strs)
 
