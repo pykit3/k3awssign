@@ -316,15 +316,20 @@ class Signer(SigV4):
 
         for k, v in headers.items():
             k = self._to_utf8(k)
-            v = self._to_utf8(v)
 
             low_name = k.lower().strip()
-            stand_v = self._trimall(str(v))
+
+            # A list holds the values of a repeated header.
+            values = v
+            if not isinstance(values, list):
+                values = [v]
 
             if low_name not in stand_headers:
                 stand_headers[low_name] = []
 
-            stand_headers[low_name].append(stand_v)
+            for value in values:
+                stand_v = self._trimall(str(value))
+                stand_headers[low_name].append(stand_v)
 
         for k, v in stand_headers.items():
             if len(v) == 1:

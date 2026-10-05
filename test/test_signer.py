@@ -159,6 +159,7 @@ class TestSigner(unittest.TestCase):
             ({"F  oo  ": "BAR"}, ["F  oo"], "", {"f  oo": "BAR"}),
             ({"F  oo  ": "  BA  R  "}, [], "f  oo", {"f  oo": "BA R"}),
             ({"foo": "bar", "bar": "   "}, [], "bar;foo", {"foo": "bar", "bar": ""}),
+            ({"Foo": ["  a   b ", "c"], "bar": ["x"]}, [], "bar;foo", {"foo": ["a b", "c"], "bar": "x"}),
         )
         for headers, not_to_sign_headers, expected_signed_headers, expected_stand_headers in test_cases:
             actual_signed_headers, actual_stand_headers = self.signer._standardize_headers(headers, not_to_sign_headers)
