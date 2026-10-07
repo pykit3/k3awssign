@@ -80,6 +80,22 @@ class SigV4:
         s = self._to_utf8(s)
         return urllib.parse.unquote_plus(s)
 
+    def _remove_dot_segments(self, path):
+        # RFC 3986 section 5.2.4, plus the removal of repeated "/" that AWS requires, as botocore does.
+        segments = []
+        for seg in path.split("/"):
+            if seg == "..":
+                if segments:
+                    segments.pop()
+            elif seg not in ("", "."):
+                segments.append(seg)
+
+        normalized = "/" + "/".join(segments)
+        if segments and path.endswith("/"):
+            normalized += "/"
+
+        return normalized
+
     def _uri_encode_args(self, args):
         encoded_args = {}
         for k, v in args.items():
@@ -519,9 +535,14 @@ class Signer(SigV4):
         if delimiter != "?":
             origin_query_string = None
 
+        # AWS signs the normalized path for every service but S3, which signs an object key as is.
+        uri_path = origin_uri_path
+        if self._service != "s3":
+            uri_path = self._remove_dot_segments(uri_path)
+
         ctx = {
             "verb": self._to_utf8(request["verb"]),
-            "uri": self._escape(self._unescape_plus(origin_uri_path), "/~"),
+            "uri": self._escape(self._unescape_plus(uri_path), "/~"),
             "algorithm": ALGORITHM,
             "request_date": request_date,
             "credential_scope": credential_scope,

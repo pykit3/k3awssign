@@ -323,11 +323,22 @@ class TestSigner(unittest.TestCase):
         ctx = self.signer.add_auth(request, signing_date="20150102")
         self.assertEqual("20150102/us-east-1/s3/aws4_request", ctx["credential_scope"])
 
+    def test_s3_path_not_normalized(self):
+        # S3 signs an object key as is, so "//" and ".." stay in the canonical URI.
+        request = {
+            "verb": "GET",
+            "uri": "/bucket//a/../b",
+            "headers": {
+                "Host": "127.0.0.1",
+            },
+        }
+
+        ctx = self.signer.add_auth(request)
+        self.assertEqual("/bucket//a/../b", ctx["uri"])
+
 
 # The AWS SigV4 test suite, copied from
 # https://github.com/boto/botocore/tree/6197e54b71a21a2e6dab2177ca051e64b51f4452/tests/unit/auth/aws4_testsuite
-# It leaves out the 6 `normalize-path` cases that remove `.`, `..` and repeated `/`,
-# because k3awssign signs a path as S3 does, without normalizing it.
 AWS4_TESTSUITE = os.path.join(os.path.dirname(__file__), "aws4_testsuite")
 
 
@@ -364,7 +375,7 @@ class TestAws4TestSuite(unittest.TestCase):
                 if f.endswith(".sreq"):
                     bases.append(os.path.join(root, f[: -len(".sreq")]))
 
-        self.assertEqual(28, len(bases))
+        self.assertEqual(34, len(bases))
 
         signer = k3awssign.Signer(
             "AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY", region="us-east-1", service="service"
