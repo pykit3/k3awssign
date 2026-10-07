@@ -1,1 +1,1 @@
-recursive-include k3awssign/example *.py
+recursive-include example *.py
