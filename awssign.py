@@ -551,11 +551,11 @@ class Signer(SigV4):
         }
 
         if origin_query_string is not None:
-            cleaned_origin_query_string = self._clean_query_string(origin_query_string)
-            args = self._query_string_to_args(cleaned_origin_query_string)
+            qs = self._clean_query_string(origin_query_string)
+            args = self._query_string_to_args(qs)
         else:
             args = self._clean_args(request.get("args", {}))
-            query_string_from_args = self._args_to_query_string(args)
+            qs = self._args_to_query_string(args)
 
         auth_args = {}
         if query_auth:
@@ -587,11 +587,6 @@ class Signer(SigV4):
         ctx["signing_key"] = self._derive_signing_key(self._secret_key, credential_scope)
 
         ctx["signature"] = self._calc_signature(ctx["signing_key"], ctx["string_to_sign"])
-
-        if origin_query_string is not None:
-            qs = cleaned_origin_query_string
-        else:
-            qs = query_string_from_args
 
         if query_auth:
             if len(qs) > 0:
