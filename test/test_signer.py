@@ -336,6 +336,26 @@ class TestSigner(unittest.TestCase):
         ctx = self.signer.add_auth(request)
         self.assertEqual("/bucket//a/../b", ctx["uri"])
 
+    def test_s3_path_plus_and_space(self):
+        # S3 reads "+" in a path as a space, so "/a+b" and "/a%20b" name the key "a b", and "/a%2Bb" names "a+b".
+        test_cases = (
+            ("/a+b", "/a%20b"),
+            ("/a%20b", "/a%20b"),
+            ("/a%2Bb", "/a%2Bb"),
+        )
+        for uri, expected in test_cases:
+            request = {
+                "verb": "GET",
+                "uri": uri,
+                "headers": {
+                    "Host": "127.0.0.1",
+                },
+            }
+
+            ctx = self.signer.add_auth(request)
+            self.assertEqual(expected, ctx["uri"], uri)
+            self.assertEqual(uri, request["uri"])
+
 
 # The AWS SigV4 test suite, copied from
 # https://github.com/boto/botocore/tree/6197e54b71a21a2e6dab2177ca051e64b51f4452/tests/unit/auth/aws4_testsuite
