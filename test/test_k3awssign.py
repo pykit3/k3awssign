@@ -59,6 +59,19 @@ class TestAddAuth(unittest.TestCase):
             request["uri"],
         )
 
+    def test_sign_presigned_uri(self):
+        # Signing a presigned uri replaces its authentication arguments.
+        signer = k3awssign.Signer("access_key", "secret_key")
+        presigned = "/?acl&foo=bar&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=access_key%2F20180101%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20180101T120101Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=7aaac5758f74924ef89431dccebebf65a01e9a932b1eb875422c05d7b46efd86"
+
+        request = {"verb": "GET", "uri": presigned, "headers": {"host": "127.0.0.1"}}
+        signer.add_auth(request, query_auth=True, request_date="20180101T120101Z")
+        self.assertEqual(presigned, request["uri"])
+
+        request = {"verb": "GET", "uri": presigned, "headers": {"host": "127.0.0.1"}}
+        signer.add_auth(request, request_date="20180101T120101Z")
+        self.assertEqual("/?acl&foo=bar", request["uri"])
+
     def test_unicode(self):
         unicode_str = "测试"
         signer = k3awssign.Signer(unicode_str, unicode_str, region=unicode_str, service="s3")

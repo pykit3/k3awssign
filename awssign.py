@@ -589,7 +589,7 @@ class Signer(SigV4):
         ctx["signature"] = self._calc_signature(ctx["signing_key"], ctx["string_to_sign"])
 
         if origin_query_string is not None:
-            qs = origin_query_string
+            qs = cleaned_origin_query_string
         else:
             qs = query_string_from_args
 
