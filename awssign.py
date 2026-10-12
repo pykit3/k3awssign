@@ -535,14 +535,17 @@ class Signer(SigV4):
         if delimiter != "?":
             origin_query_string = None
 
-        # AWS signs the normalized path for every service but S3, which signs an object key as is.
+        # AWS signs the normalized path, encoded once more, for every service but S3. S3 signs the object key
+        # as is: the path decoded, with "+" read as a space, then encoded once.
         uri_path = origin_uri_path
         if self._service != "s3":
             uri_path = self._remove_dot_segments(uri_path)
+        else:
+            uri_path = self._unescape_plus(uri_path)
 
         ctx = {
             "verb": self._to_utf8(request["verb"]),
-            "uri": self._escape(self._unescape_plus(uri_path), "/~"),
+            "uri": self._escape(uri_path, "/~"),
             "algorithm": ALGORITHM,
             "request_date": request_date,
             "credential_scope": credential_scope,

@@ -356,6 +356,28 @@ class TestSigner(unittest.TestCase):
             self.assertEqual(expected, ctx["uri"], uri)
             self.assertEqual(uri, request["uri"])
 
+    def test_path_encoded_again(self):
+        # Every service but S3 signs the path as sent, encoded once more. botocore's SigV4Auth gives these values.
+        signer = k3awssign.Signer(self.access_key, self.secret_key, service="service")
+        test_cases = (
+            ("/a%20b", "/a%2520b"),
+            ("/a+b", "/a%2Bb"),
+            ("/a%2Bb", "/a%252Bb"),
+            ("/a%2Fb", "/a%252Fb"),
+            ("/a b", "/a%20b"),
+        )
+        for uri, expected in test_cases:
+            request = {
+                "verb": "GET",
+                "uri": uri,
+                "headers": {
+                    "Host": "127.0.0.1",
+                },
+            }
+
+            ctx = signer.add_auth(request)
+            self.assertEqual(expected, ctx["uri"], uri)
+
 
 # The AWS SigV4 test suite, copied from
 # https://github.com/boto/botocore/tree/6197e54b71a21a2e6dab2177ca051e64b51f4452/tests/unit/auth/aws4_testsuite
